@@ -101,6 +101,30 @@ function Section({ section, questions }) {
   const endIndex = startIndex + questionsPerPage;
   const currentQuestions = shuffledQuestions.slice(startIndex, endIndex);
   const currentAttempted = attempted.slice(startIndex, endIndex);
+  const currentCorrect = correct.slice(startIndex, endIndex);
+
+  // Helper function to get question status color and border
+  const getQuestionStyle = (isAttempted, isCorrect) => {
+    if (!isAttempted) {
+      return {
+        background: "#ccc",
+        border: "2px solid #bbb",
+        title: "Not attempted"
+      };
+    } else if (isCorrect) {
+      return {
+        background: "#4caf50", // Green for correct
+        border: "2px solid #388e3c",
+        title: "Correct"
+      };
+    } else {
+      return {
+        background: "#f44336", // Red for incorrect
+        border: "2px solid #c62828",
+        title: "Incorrect"
+      };
+    }
+  };
 
   const handlePrevPage = () => {
     setCurrentPage(Math.max(0, currentPage - 1));
@@ -225,37 +249,37 @@ function Section({ section, questions }) {
               maxWidth: "100vw",
             }}
           >
-            {currentQuestions.map((q, idx) => (
-              <div
-                key={q.shuffledNumber}
-                onClick={() => handleQuestionClick(q.shuffledNumber)}
-                style={{
-                  minWidth: 28,
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  background: currentAttempted[idx] ? "#4caf50" : "#ccc",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "bold",
-                  border:
-                    currentAttempted[idx] && currentAttempted[idx] !== "NaN"
-                      ? "2px solid #388e3c"
-                      : "2px solid #bbb",
-                  flex: "0 0 auto",
-                  cursor: "pointer",
-                  transition: "transform 0.1s",
-                }}
-                onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
-                onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
-                onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
-                title={`Click to jump to question ${q.shuffledNumber} - ${currentAttempted[idx] ? "Attempted" : "Not attempted"}`}
-              >
-                {q.shuffledNumber}
-              </div>
-            ))}
+            {currentQuestions.map((q, idx) => {
+              const questionStyle = getQuestionStyle(currentAttempted[idx], currentCorrect[idx]);
+              return (
+                <div
+                  key={q.shuffledNumber}
+                  onClick={() => handleQuestionClick(q.shuffledNumber)}
+                  style={{
+                    minWidth: 28,
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    background: questionStyle.background,
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: "bold",
+                    border: questionStyle.border,
+                    flex: "0 0 auto",
+                    cursor: "pointer",
+                    transition: "transform 0.1s",
+                  }}
+                  onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
+                  onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                  title={`Click to jump to question ${q.shuffledNumber} - ${questionStyle.title}`}
+                >
+                  {q.shuffledNumber}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
