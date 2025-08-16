@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/kcna-quiz-app/static/js/main.89904b7f.js",
+    "main.js": "/kcna-quiz-app/static/js/main.694aa6e9.js",
     "index.html": "/kcna-quiz-app/index.html",
-    "main.89904b7f.js.map": "/kcna-quiz-app/static/js/main.89904b7f.js.map"
+    "main.694aa6e9.js.map": "/kcna-quiz-app/static/js/main.694aa6e9.js.map"
   },
   "entrypoints": [
-    "static/js/main.89904b7f.js"
+    "static/js/main.694aa6e9.js"
   ]
 }
