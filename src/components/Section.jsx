@@ -37,6 +37,7 @@ function Section({ section, questions }) {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [resetFlag, setResetFlag] = useState(0);
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
 
   // Load or create shuffle and answers for this section
   useEffect(() => {
@@ -93,6 +94,22 @@ function Section({ section, questions }) {
   const progress = total ? (attemptedCount / total) * 100 : 0;
   const percentCorrect = total ? Math.round((correctCount / total) * 100) : 0;
 
+  // Pagination for question numbers
+  const questionsPerPage = 10;
+  const totalPages = Math.ceil(shuffledQuestions.length / questionsPerPage);
+  const startIndex = currentPage * questionsPerPage;
+  const endIndex = startIndex + questionsPerPage;
+  const currentQuestions = shuffledQuestions.slice(startIndex, endIndex);
+  const currentAttempted = attempted.slice(startIndex, endIndex);
+
+  const handlePrevPage = () => {
+    setCurrentPage(Math.max(0, currentPage - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(Math.min(totalPages - 1, currentPage + 1));
+  };
+
   // Called by QuizCard when a question is answered
   const handleAnswered = (shuffledNumber, answer) => {
     setSelectedAnswers((prev) => {
@@ -101,6 +118,17 @@ function Section({ section, questions }) {
       localStorage.setItem(`kcna-answers-${section}`, JSON.stringify(updated));
       return updated;
     });
+  };
+
+  // Handle clicking on question number to jump to that question
+  const handleQuestionClick = (questionNumber) => {
+    const questionElement = document.getElementById(`question-${questionNumber}`);
+    if (questionElement) {
+      questionElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
   };
 
   return (
@@ -141,54 +169,107 @@ function Section({ section, questions }) {
             }}
           />
         </div>
-        {/* Question Number List - wraps */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "8px",
-            marginBottom: "16px",
-            paddingBottom: 4,
-            maxWidth: "100vw",
-          }}
-        >
-          {shuffledQuestions.map((q, idx) => (
-            <div
-              key={q.shuffledNumber}
+        {/* Question Number List - paginated for mobile */}
+        <div style={{ marginBottom: "16px" }}>
+          {/* Pagination controls */}
+          <div style={{ 
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "center", 
+            marginBottom: "8px",
+            fontSize: "12px",
+            color: "#666"
+          }}>
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 0}
               style={{
-                minWidth: 28,
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                background: attempted[idx] ? "#4caf50" : "#ccc",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-                border:
-                  attempted[idx] && attempted[idx] !== "NaN"
-                    ? "2px solid #388e3c"
-                    : "2px solid #bbb",
-                flex: "0 0 auto",
+                padding: "4px 8px",
+                fontSize: "12px",
+                background: currentPage === 0 ? "#ddd" : "#007bff",
+                color: currentPage === 0 ? "#999" : "#fff",
+                border: "none",
+                borderRadius: "4px",
+                cursor: currentPage === 0 ? "not-allowed" : "pointer"
               }}
-              title={attempted[idx] ? "Attempted" : "Not attempted"}
             >
-              {q.shuffledNumber}
-            </div>
-          ))}
+              ← Prev
+            </button>
+            <span>
+              {startIndex + 1}-{Math.min(endIndex, total)} of {total}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages - 1}
+              style={{
+                padding: "4px 8px",
+                fontSize: "12px",
+                background: currentPage === totalPages - 1 ? "#ddd" : "#007bff",
+                color: currentPage === totalPages - 1 ? "#999" : "#fff",
+                border: "none",
+                borderRadius: "4px",
+                cursor: currentPage === totalPages - 1 ? "not-allowed" : "pointer"
+              }}
+            >
+              Next →
+            </button>
+          </div>
+          
+          {/* Question numbers */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "8px",
+              paddingBottom: 4,
+              maxWidth: "100vw",
+            }}
+          >
+            {currentQuestions.map((q, idx) => (
+              <div
+                key={q.shuffledNumber}
+                onClick={() => handleQuestionClick(q.shuffledNumber)}
+                style={{
+                  minWidth: 28,
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: currentAttempted[idx] ? "#4caf50" : "#ccc",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: "bold",
+                  border:
+                    currentAttempted[idx] && currentAttempted[idx] !== "NaN"
+                      ? "2px solid #388e3c"
+                      : "2px solid #bbb",
+                  flex: "0 0 auto",
+                  cursor: "pointer",
+                  transition: "transform 0.1s",
+                }}
+                onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
+                onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+                onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                title={`Click to jump to question ${q.shuffledNumber} - ${currentAttempted[idx] ? "Attempted" : "Not attempted"}`}
+              >
+                {q.shuffledNumber}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       <div style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: 8 }}>
         {shuffledQuestions.map((q, index) => (
-          <QuizCard
-            key={q.shuffledNumber}
-            section={section}
-            question={{ ...q, number: q.shuffledNumber }}
-            selected={selectedAnswers[q.shuffledNumber] || ""}
-            resetFlag={resetFlag}
-            onAnswered={handleAnswered}
-          />
+          <div key={q.shuffledNumber} id={`question-${q.shuffledNumber}`}>
+            <QuizCard
+              section={section}
+              question={{ ...q, number: q.shuffledNumber }}
+              selected={selectedAnswers[q.shuffledNumber] || ""}
+              resetFlag={resetFlag}
+              onAnswered={handleAnswered}
+            />
+          </div>
         ))}
       </div>
     </div>
