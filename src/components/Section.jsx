@@ -11,10 +11,25 @@ function shuffleArray(array) {
 }
 
 function shuffleQuestionsAndOptions(questions) {
-  const shuffled = shuffleArray(questions).map((q) => ({
-    ...q,
-    options: shuffleArray(q.options),
-  }));
+  const shuffled = shuffleArray(questions).map((q) => {
+    // First, get the correct answer text using the original answer letter
+    const originalAnswerIndex = q.answer.charCodeAt(0) - 65; // A=0, B=1, C=2, etc.
+    const correctAnswerText = q.options[originalAnswerIndex];
+    
+    // Shuffle the options
+    const shuffledOptions = shuffleArray(q.options);
+    
+    // Find the new position of the correct answer in the shuffled array
+    const newAnswerIndex = shuffledOptions.indexOf(correctAnswerText);
+    const newAnswerLetter = String.fromCharCode(65 + newAnswerIndex);
+    
+    return {
+      ...q,
+      options: shuffledOptions,
+      answer: newAnswerLetter, // Update answer to new position
+      correctAnswerText: correctAnswerText, // Store for reference
+    };
+  });
   return shuffled.map((q, idx) => ({ ...q, shuffledNumber: idx + 1 }));
 }
 
